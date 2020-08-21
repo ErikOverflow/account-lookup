@@ -1,8 +1,6 @@
 const config = require('../config');
 const axios = require('axios');
-const mongoose = require('mongoose');
-const connection_uri = process.env.RIOTDB
-mongoose.connect(connection_uri, {useNewUrlParser: true, useUnifiedTopology: true});
+const mongoose = require('../dbs/riot_db_mongoose');
 
 const axiosOptions = {
   headers: {
