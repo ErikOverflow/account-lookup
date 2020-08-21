@@ -1,0 +1,7 @@
+{
+    "files.exclude": {
+        ".gitattributes": true,
+        ".gitignore": true,
+        "README.md": true
+    }
+}
