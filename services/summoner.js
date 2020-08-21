@@ -1,5 +1,8 @@
 const config = require('../config');
 const axios = require('axios');
+const mongoose = require('mongoose');
+const connection_uri = process.env.RIOTDB
+mongoose.connect(connection_uri, {useNewUrlParser: true, useUnifiedTopology: true});
 
 const axiosOptions = {
   headers: {
@@ -18,7 +21,6 @@ const summonerParser = async (req,res) => {
     }
     const summonerData = await getSummonerByName(req.query.region, req.query.summonerName);
     return res.status(200).json(summonerData);
-    
 }
 
 module.exports = {
