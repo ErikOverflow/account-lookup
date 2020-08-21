@@ -1,6 +1,6 @@
-const config = require('../config');
-const axios = require('axios');
-const mongoose = require('../dbs/riot_db_mongoose');
+const config = require("../config");
+const axios = require("axios");
+const getDb = require("../dbs/riot_mongoClient");
 
 const axiosOptions = {
   headers: {
@@ -8,19 +8,49 @@ const axiosOptions = {
   },
 };
 
-const getSummonerByName = async (region,summonerName) => {
-    const res = await axios.get(config.summonerByNameUrl(region, summonerName), axiosOptions);
-    return res.data;
-}
+const getSummonerByName = async (region, summonerName) => {
+  const db = await getDb();
+  //Query for the summoner data in MongoDb
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const query = { name: new RegExp(`^${summonerName}$`, "i"), region, lastModified: {$gte: yesterday}};
+  const findOptions = { projection: {_id: 0 }};
+  let summonerDoc = await db.collection("summoners").findOne(query, findOptions);
+  //Check for up-to-date data within 24 hours
+  if(summonerDoc){
+    return summonerDoc
+  }
 
-const summonerParser = async (req,res) => {
-    if(!req.query.summonerName || !req.query.region){
-        return res.status(403).json({error: "Missing summoner name or region."});
-    }
-    const summonerData = await getSummonerByName(req.query.region, req.query.summonerName);
-    return res.status(200).json(summonerData);
-}
+  delete query.lastModified;
+  //Get new summoner data from Riot
+  const res = await axios.get(
+    config.summonerByNameUrl(region, summonerName),
+    axiosOptions
+  );
+  let summonerData = res.data;
+
+  //Upsert the document to the DB
+  const update = {
+    $set: summonerData,
+    $currentDate: {lastModified: true}
+  }
+  const updateOptions = {upsert: true};
+  await db.collection("summoners").updateOne(query, update, updateOptions);
+  summonerDoc = await db.collection("summoners").findOne(query, findOptions);
+
+  return summonerDoc;
+};
+
+const summonerParser = async (req, res) => {
+  if (!req.query.summonerName || !req.query.region) {
+    return res.status(403).json({ error: "Missing summoner name or region." });
+  }
+
+  const summonerData = await getSummonerByName(req.query.region.toLowerCase(), req.query.summonerName)
+  
+  return res.status(200).json(summonerData);
+};
 
 module.exports = {
-    summonerParser
-}
+  summonerParser,
+};
