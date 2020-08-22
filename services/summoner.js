@@ -15,7 +15,7 @@ const getSummonerByName = async (region, summonerName) => {
   yesterday.setDate(yesterday.getDate() - 1);
   const query = {
     name: new RegExp(`^${summonerName}$`, "i"),
-    region,
+    region: new RegExp(`^${region}$`, "i"),
     lastModified: { $gte: yesterday },
   };
   const findOptions = { projection: { _id: 0 } };
@@ -57,17 +57,18 @@ const getSummonerByName = async (region, summonerName) => {
   return summonerDoc;
 };
 
-const summonerParser = async (req, res) => {
+const summonerParser = async (req, res, next) => {
   if (!req.query.summonerName || !req.query.region) {
     return res.status(403).json({ error: "Missing summoner name or region." });
   }
 
   const summonerData = await getSummonerByName(
-    req.query.region.toLowerCase(),
+    req.query.region,
     req.query.summonerName
   );
 
-  return res.status(200).json(summonerData);
+  req.summoner = summonerData;
+  return next();
 };
 
 module.exports = {

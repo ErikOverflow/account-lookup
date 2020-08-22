@@ -13,6 +13,7 @@ const ping = require('./services/ping');
 v1.get('/ping', ping);
 v2.get('/ping', (req,res) => res.status(200).json({message: "Successful ping", otherData: "pigs are pink"}));
 const summoner = require('./services/summoner');
-v1.get('/summoner', summoner.summonerParser);
+const ranked = require('./services/ranked');
+v1.get('/ranked', summoner.summonerParser, ranked.lookupRankedDetail);
 
 app.listen(process.env.PORT, () => console.log(`Server is now listening on port: ${process.env.PORT}`));
