@@ -55,11 +55,11 @@ const getRankedDetail = async (region, summonerId) => {
   return rankedDoc;
 };
 
-const lookupRankedDetail = async (req, res) => {
+const rankedParser = async (req, res, next) => {
     req.summoner.ranked = await getRankedDetail(req.query.region, req.summoner.id);
-    return res.status(200).json(req.summoner.ranked);
+    return next();
 }
 
 module.exports = {
-    lookupRankedDetail
+    rankedParser
 }
