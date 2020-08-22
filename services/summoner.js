@@ -19,8 +19,9 @@ const getSummonerByName = async (region, summonerName) => {
     lastModified: { $gte: yesterday },
   };
   const findOptions = { projection: { _id: 0 } };
+  let summonerDoc
   try {
-    let summonerDoc = await db
+    summonerDoc = await db
       .collection("summoners")
       .findOne(query, findOptions);
   } catch (err) {
@@ -32,9 +33,10 @@ const getSummonerByName = async (region, summonerName) => {
   }
 
   delete query.lastModified;
+  let res;
   //Get new summoner data from Riot
   try {
-    const res = await axios.get(
+    res = await axios.get(
       config.summonerByNameUrl(region, summonerName),
       axiosOptions
     );
